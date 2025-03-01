@@ -1,0 +1,33 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "main": "src/app.js",
+  "name": "task-manager",
+  "author": "Arsalan Ansari",
+  "description": "Manage to-do tasks",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "env-cmd .env nodemon src/index.js",
+    "test": "env-cmd .env.test jest --watchAll --runInBand --detectOpenHandles"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "sharp": "^0.31.3",
+    "multer": "^1.4.1",
+    "mongodb": "^5.0.0",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.16.4",
+    "mongoose": "^5.3.16",
+    "nodemailer": "^6.9.1",
+    "validator": "^13.9.0",
+    "jsonwebtoken": "^8.4.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "env-cmd": "^8.0.2",
+    "nodemon": "^2.0.20",
+    "supertest": "^3.4.1"
+  }
+}
