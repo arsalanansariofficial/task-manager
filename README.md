@@ -4,9 +4,9 @@ _Task Manager_ is a simple tasks tracking platform that allows users to register
 
 See the following _README.md_ files for more details
 
-- [Backend with Elysia](backend/README.md)
-- [Backend with Express](backend-elysia/README.md)
-- [Frontend with React](frontend/README.md)
+- [Backend with Elysia](backend/elysia/README.md)
+- [Backend with Express](backend/express/README.md)
+- [Frontend with React](frontend/vite/README.md)
 
 ### Author
 

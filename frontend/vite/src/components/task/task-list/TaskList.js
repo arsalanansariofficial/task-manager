@@ -1,4 +1,4 @@
-import ImageTemplate from '../../../components/common/UI/ImageTemplate';
+import ImageTemplate from '../../common/UI/ImageTemplate';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { tasksActions } from '../../../store/tasks-slice';
