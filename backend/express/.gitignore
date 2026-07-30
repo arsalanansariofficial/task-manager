@@ -1,63 +1,52 @@
-####################
-# * vercel
-####################
+# vercel
+package-lock.json
+**/*.tar.gz
+**/*.trace
+**/*.zip
+**/*.tgz
+**/*.log
+**/*.bun
 .vercel
 
-####################
-# * editor
-####################
-.vscode
-
-####################
-# * testing
-####################
-/coverage
-
-####################
-# * production
-####################
-/build
-
-####################
-# * typescript
-####################
-*.tsbuildinfo
-next-env.d.ts
-
-####################
-# * next.js
-####################
-/out/
-/.next/
-
-####################
-# * misc
-####################
-*.pem
+# misc
+!public/.gitkeep
+.VSCodeCounter
 .DS_Store
+public/*
+.vscode
+*.pem
 
-####################
-# * environments
-####################
+# local env files
+.env.development.local
+.env.production.local
+.env.test.local
+.env.local
 .env
-.env*.local
 
-####################
-# * debug
-####################
-npm-debug.log*
+# debug
 yarn-debug.log*
 yarn-error.log*
+npm-debug.log*
 
-####################
-# * dependencies
-####################
-/.pnp
-.pnp.js
+# dependencies
 /node_modules
-.yarn/install-state.gz
+.pnp.js
+/.pnp
 
-####################
-# * external
-####################
-package-lock.json
+# production
+/build
+/server
+dist
+
+# next.js
+/.next/
+/out/
+
+# prisma
+/generated/prisma
+
+# testing
+/coverage
+
+# database
+*.db

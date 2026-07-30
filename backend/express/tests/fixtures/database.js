@@ -1,31 +1,28 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const { UserModel } = require('../../src/models/user');
-const { TaskModel } = require('../../src/models/task');
+
+const { UserModel } = require('../../src/modules/models/user');
+const { TaskModel } = require('../../src/modules/models/task');
 
 const testUserId = new mongoose.Types.ObjectId();
 
 const testUser = {
-  _id: testUserId,
-  name: 'User One',
-  email: 'test-user-one@example.com',
-  password: 'test-user',
   tokens: [
     {
       token: jwt.sign({ _id: testUserId.toString() }, process.env.secretKey, {
         expiresIn: '1 hour'
       })
     }
-  ]
+  ],
+  email: 'test-user-one@example.com',
+  password: 'test-user',
+  name: 'User One',
+  _id: testUserId
 };
 
 const testUserTwoId = new mongoose.Types.ObjectId();
 
 const testUserTwo = {
-  _id: testUserTwoId,
-  name: 'User Two',
-  email: 'test-user-two@example.com',
-  password: 'test-user-two',
   tokens: [
     {
       token: jwt.sign(
@@ -34,28 +31,32 @@ const testUserTwo = {
         { expiresIn: '1 hour' }
       )
     }
-  ]
+  ],
+  email: 'test-user-two@example.com',
+  password: 'test-user-two',
+  _id: testUserTwoId,
+  name: 'User Two'
 };
 
 const taskOne = {
   _id: new mongoose.Types.ObjectId(),
   description: 'Task One',
-  completed: false,
-  owner: testUserId
+  owner: testUserId,
+  completed: false
 };
 
 const taskTwo = {
   _id: new mongoose.Types.ObjectId(),
   description: 'Task Two',
-  completed: true,
-  owner: testUserId
+  owner: testUserId,
+  completed: true
 };
 
 const taskThree = {
   _id: new mongoose.Types.ObjectId(),
   description: 'Task Three',
-  completed: true,
-  owner: testUserTwoId
+  owner: testUserTwoId,
+  completed: true
 };
 
 const setupDatabase = async () => {
@@ -69,12 +70,12 @@ const setupDatabase = async () => {
 };
 
 module.exports = {
-  testUserId,
-  testUser,
   testUserTwoId,
+  setupDatabase,
   testUserTwo,
-  taskOne,
-  taskTwo,
+  testUserId,
   taskThree,
-  setupDatabase
+  testUser,
+  taskOne,
+  taskTwo
 };

@@ -1,0 +1,17 @@
+import z from 'zod';
+
+export const envSchema = z.object({
+  JWT_SECRET: z
+    .string({ error: 'JWT secret should be valid string.' })
+    .min(32, { error: 'JWT secret should be atleast 32 characters.' }),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
+  DATABASE_URL: z.url({ error: 'DATABASE_URL should be valid url.' }),
+  JWT_EXPIRES_IN: z.coerce.number().default(60 * 60 * 1000),
+  SALT: z.union([z.coerce.number(), z.string()]).default(8),
+  UPLOAD_DIR: z.string().default('public'),
+  PORT: z.coerce.number().default(3000)
+});
+
+export const env = envSchema.parse(process.env);

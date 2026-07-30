@@ -1,14 +1,11 @@
 const nodeMailer = require('nodemailer');
 const sender = process.env.email;
-const password = process.env.password;
+const {password} = process.env;
 
 const sendWelcomeEmail = (receiver, name) => {
   const transporter = nodeMailer.createTransport({
-    service: 'hotmail',
-    auth: {
-      user: sender,
-      pass: password
-    }
+    auth: { pass: password, user: sender },
+    service: 'hotmail'
   });
 
   const template = `<h1>Welcome ${name}</h1>
@@ -17,10 +14,10 @@ const sendWelcomeEmail = (receiver, name) => {
         `;
 
   const mailOptions = {
-    from: sender,
-    to: receiver,
     subject: 'Account Created',
-    html: template
+    html: template,
+    from: sender,
+    to: receiver
   };
 
   transporter.sendMail(mailOptions);
@@ -28,23 +25,20 @@ const sendWelcomeEmail = (receiver, name) => {
 
 const sendCancellationEmail = receiver => {
   const transporter = nodeMailer.createTransport({
-    service: 'hotmail',
-    auth: {
-      user: sender,
-      pass: password
-    }
+    auth: { pass: password, user: sender },
+    service: 'hotmail'
   });
 
   const template = `<p>Account with ${receiver} is deleted</p>`;
 
   const mailOptions = {
-    from: sender,
-    to: receiver,
     subject: 'Account Deleted',
-    html: template
+    html: template,
+    from: sender,
+    to: receiver
   };
 
   transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendWelcomeEmail, sendCancellationEmail };
+module.exports = { sendCancellationEmail, sendWelcomeEmail };

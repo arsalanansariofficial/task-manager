@@ -1,64 +1,51 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { isEmail } = require('validator');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
 const { TaskModel } = require('./task');
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      trim: true,
-      required: true
-    },
-    email: {
-      type: String,
-      unique: true,
-      required: true,
-      trim: true,
-      lowercase: true,
-      validate(email) {
-        if (!isEmail(email)) throw new Error('Email is invalid');
-      }
-    },
     password: {
-      type: String,
-      required: true,
-      trim: true,
-      minLength: 7,
       validate(password) {
         if (password.toLowerCase().includes('password'))
           throw new Error('Password is invalid');
-      }
+      },
+      required: true,
+      type: String,
+      minLength: 7,
+      trim: true
+    },
+    email: {
+      validate(email) {
+        if (!isEmail(email)) throw new Error('Email is invalid');
+      },
+      lowercase: true,
+      required: true,
+      type: String,
+      unique: true,
+      trim: true
     },
     age: {
-      type: Number,
-      default: 0,
       validate(age) {
         if (age < 0) throw new Error('Age must be positive');
-      }
+      },
+      type: Number,
+      default: 0
     },
-    profilePicture: {
-      type: String
-    },
-    tokens: [
-      {
-        token: {
-          type: String
-        }
-      }
-    ]
+    name: { required: true, type: String, trim: true },
+    tokens: [{ token: { type: String } }],
+    profilePicture: { type: String }
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
 // Create a one-to-many relationship between user --> task
 userSchema.virtual('tasks', {
-  ref: 'Task',
+  foreignField: 'owner',
   localField: '_id',
-  foreignField: 'owner'
+  ref: 'Task'
 });
 
 // Modify user object
@@ -76,7 +63,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
   const user = await UserModel.findOne({ email });
   if (!user) throw new Error('Failed to login');
 
-  const matchPassword = await bcrypt.compare(password, user['password']);
+  const matchPassword = await bcrypt.compare(password, user.password);
   if (!matchPassword) throw new Error('Failed to login');
 
   return user;
@@ -96,11 +83,11 @@ userSchema.methods.generateAuthenticationToken = async function () {
   const removeTokenAt = 60 * 60 * 1000;
 
   setTimeout(async () => {
-    const user = await UserModel.findById(this['_id']);
+    const user = await UserModel.findById(this._id);
     user.tokens = user.tokens.filter(
       tokenObject => tokenObject.token !== token
     );
-    await user['save']();
+    await user.save();
   }, removeTokenAt);
 
   return token;
@@ -109,9 +96,9 @@ userSchema.methods.generateAuthenticationToken = async function () {
 // Hashes password from the user credentials
 userSchema.pre('save', async function (next) {
   const user = this;
-  if (user.isModified('password')) {
+  if (user.isModified('password')) 
     user.password = await bcrypt.hash(user.password, 8);
-  }
+  
   next();
 });
 

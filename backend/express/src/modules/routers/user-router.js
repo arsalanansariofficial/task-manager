@@ -1,11 +1,11 @@
-const fs = require('fs');
-const crypto = require('crypto');
 const express = require('express');
+const crypto = require('crypto');
+const fs = require('fs');
 // const sharp = require("sharp");
 
+const { authentication } = require('../../lib/middleware/authentication').default;
+const { uploadProfile } = require('../../lib/middleware/image-upload');
 const { UserModel } = require('../models/user');
-const { uploadProfile } = require('../middleware/image-upload');
-const { authentication } = require('../middleware/authentication');
 // const {sendWelcomeEmail, sendCancellationEmail} = require("../emails/email");
 
 const userRouter = new express.Router();
@@ -14,9 +14,9 @@ userRouter.post('/users', async (request, response) => {
   const user = new UserModel(request.body);
   user.profilePicture = 'default-profile-picture.png';
   try {
-    const token = await user['generateAuthenticationToken']();
+    const token = await user.generateAuthenticationToken();
     // sendWelcomeEmail(user['email'], user['name']);
-    response.status(201).send({ user, token });
+    response.status(201).send({ token, user });
   } catch (error) {
     response.status(500).send(error);
   }
@@ -24,18 +24,15 @@ userRouter.post('/users', async (request, response) => {
 
 userRouter.post('/users/login', async (request, response) => {
   try {
-    const user = await UserModel['findByCredentials'](
+    const user = await UserModel.findByCredentials(
       request.body.email,
       request.body.password
     );
-    const token = await user['generateAuthenticationToken']();
-    response.status(200).send({ user, token });
+    const token = await user.generateAuthenticationToken();
+    response.status(200).send({ token, user });
   } catch (error) {
     if (error.message === 'Failed to login') {
-      const errorResponse = {
-        code: 400,
-        message: error.message
-      };
+      const errorResponse = { message: error.message, code: 400 };
       response.status(400).send(errorResponse);
     } else response.status(500).send(error);
   }
@@ -43,9 +40,7 @@ userRouter.post('/users/login', async (request, response) => {
 
 userRouter.post('/users/logout', authentication, async (request, response) => {
   try {
-    request.user.tokens = request.user.tokens.filter(({ token }) => {
-      return token !== request.token;
-    });
+    request.user.tokens = request.user.tokens.filter(({ token }) => token !== request.token);
     await request.user.save();
     response.status(200).send('Session deactivated');
   } catch (error) {
@@ -84,10 +79,7 @@ userRouter.patch(
     const isValidUser = keys.every(key => allowedKeys.includes(key));
 
     if (!isValidUser) {
-      const errorResponse = {
-        code: 400,
-        message: 'Invalid updates'
-      };
+      const errorResponse = { message: 'Invalid updates', code: 400 };
       return response.status(400).send(errorResponse);
     }
 
@@ -139,10 +131,7 @@ userRouter.post(
       await request.user.save();
       response.status(200).send(request.user);
     } catch (error) {
-      const errorResponse = {
-        code: 500,
-        message: 'Internal server error'
-      };
+      const errorResponse = { message: 'Internal server error', code: 500 };
       response.status(500).send(errorResponse);
     }
   }
@@ -165,15 +154,12 @@ userRouter.delete(
 userRouter.get('/users/:id/view-profile-picture', async (request, response) => {
   try {
     const user = await UserModel.findById(request.params.id);
-    if (!user || !user['profilePicture']) {
-      const errorResponse = {
-        code: 400,
-        message: 'User not found'
-      };
+    if (!user || !user.profilePicture) {
+      const errorResponse = { message: 'User not found', code: 400 };
       return response.status(400).send(errorResponse);
     }
     response.set('Content-Type', 'image/png;image/jpg;image/jpeg');
-    response.status(200).send(user['profilePicture']);
+    response.status(200).send(user.profilePicture);
   } catch (error) {
     response.status(500).send(error);
   }
