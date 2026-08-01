@@ -13,7 +13,7 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_', args: 'all' }
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', args: 'all' }
       ],
       'react-refresh/only-export-components': 'off',
       'arrow-body-style': ['error', 'as-needed'],
@@ -31,7 +31,6 @@ export default defineConfig([
       'no-unsafe-optional-chaining': 'error',
       'no-nonoctal-decimal-escape': 'error',
       'no-promise-executor-return': 'error',
-      'func-names': ['error', 'as-needed'],
       'no-async-promise-executor': 'error',
       'no-empty-character-class': 'error',
       'no-restricted-properties': 'error',
