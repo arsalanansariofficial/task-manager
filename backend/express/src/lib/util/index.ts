@@ -1,6 +1,7 @@
-export enum Headers {
-  Authorization = 'Authorization',
-  Bearer = 'Bearer'
-}
+import bcrypt from 'bcryptjs';
 
-export type Err = { path: Array<string>; message: string };
+import { env } from '@/lib/config';
+
+export async function hashPassword(payload: string) {
+  return await bcrypt.hash(payload, env.SALT);
+}
