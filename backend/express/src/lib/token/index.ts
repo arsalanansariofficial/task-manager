@@ -1,11 +1,11 @@
-import jwt from 'jsonwebtoken';
+import { verify, sign } from 'jsonwebtoken';
 
 import { InvalidJwtError } from '@/lib/error';
 import { env } from '@/lib/config';
 
 export function verifyToken(payload: string) {
   try {
-    return jwt.verify(payload, env.JWT_SECRET) as { _id: string };
+    return verify(payload, env.JWT_SECRET) as { id: string };
   } catch (error: unknown) {
     throw new InvalidJwtError([
       { message: (error as Error).message, path: [payload] }
@@ -23,7 +23,7 @@ export function hasValidAuthentication(value: unknown) {
 }
 
 export function generateToken(payload: string, expiresIn = env.JWT_EXPIRES_IN) {
-  return jwt.sign({ id: payload }, env.JWT_SECRET, { expiresIn });
+  return sign({ id: payload }, env.JWT_SECRET, { expiresIn });
 }
 
 export function hasSuccess(value: unknown) {
