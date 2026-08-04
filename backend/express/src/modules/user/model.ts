@@ -1,0 +1,173 @@
+import { type HydratedDocument, Schema, Model, Types, model } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import z from 'zod';
+
+import type { ModelType } from '@/lib/util/types';
+
+import { generateToken, verifyToken } from '@/lib/token';
+import { InvalidCredentialsError } from '@/lib/error';
+import { Task } from '@/modules/task/model';
+import { hashPassword } from '@/lib/util';
+import { env } from '@/lib/config';
+
+export type UserModel = Model<
+  UserDocument,
+  object,
+  object,
+  object,
+  { tokens: Types.DocumentArray<TokenDocument> } & UserDocument
+>;
+export type TokenDocument = HydratedDocument<User['user']['tokens'][0]>;
+export type UserWithToken = { user: UserDocument; token: string };
+export type UserDocument = HydratedDocument<User['user']>;
+export type User = ModelType<typeof userModel>;
+
+export const user = z.object({
+  password: z
+    .string('Password should be valid.')
+    .nonempty('Password is required.')
+    .min(8, 'Password must be at least 8 characters long.')
+    .max(256, 'Password must be at most 256 characters long.')
+    .regex(/[0-9]/, 'Password must contain at least one number.')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter.')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
+    .regex(
+      /[^A-Za-z0-9]/,
+      'Password must contain at least one special character.'
+    )
+    .trim(),
+  age: z.coerce
+    .number({ error: 'Age should be valid.' })
+    .positive({ error: 'Age should be positive.' })
+    .default(0),
+  name: z
+    .string('Name should be valid.')
+    .nonempty('Name is required.')
+    .trim()
+    .toLowerCase(),
+  tokens: z.array(
+    z.object({ _id: z.instanceof(Types.ObjectId), token: z.string() })
+  ),
+  email: z.email('Email should be valid.').trim().toLowerCase(),
+  _id: z.instanceof(Types.ObjectId),
+  imageUrl: z.string().optional()
+});
+
+export const userModel = { user };
+
+export const User = model(
+  'User',
+  new Schema<UserDocument, UserModel>(
+    {
+      age: {
+        validate(value: number) {
+          return z.coerce
+            .number({ error: 'Age should be valid.' })
+            .positive({ error: 'Age should be positive.' })
+            .default(0)
+            .parse(value);
+        },
+        type: Number,
+        default: 0
+      },
+      password: {
+        validate(value: string) {
+          return userModel.user.shape.password.parse(value);
+        },
+        required: true,
+        select: false,
+        type: String,
+        minLength: 8,
+        trim: true
+      },
+      email: {
+        validate(value: string) {
+          return userModel.user.shape.email.parse(value);
+        },
+        lowercase: true,
+        required: true,
+        type: String,
+        unique: true,
+        trim: true
+      },
+      name: { lowercase: true, required: true, type: String, trim: true },
+      tokens: [{ token: { select: false, type: String } }],
+      imageUrl: { type: String }
+    },
+    {
+      statics: {
+        async validateCredentials({
+          password,
+          email,
+          token
+        }: {
+          password?: string;
+          email?: string;
+          token?: string;
+        }) {
+          const { id } = (token && verifyToken(token)) || { id: undefined };
+          const error = new InvalidCredentialsError();
+          const [errors] = error.errors;
+
+          const user = await this.findOne({
+            $or: [{ 'tokens.token': token, id }, { email }]
+          });
+
+          if (!user) {
+            errors.path = [token, email, id].filter((v): v is string =>
+              Boolean(v)
+            );
+            throw error;
+          }
+
+          const { password: originalPassword, ...userWithoutPassword } = user;
+          if (password && !(await bcrypt.compare(password, originalPassword))) {
+            errors.path = [password, email].filter((v): v is string =>
+              Boolean(v)
+            );
+            throw error;
+          }
+
+          return userWithoutPassword;
+        }
+      },
+      methods: {
+        async addToken() {
+          const token = generateToken(this.id);
+          await saveToken({ user: this, token });
+          removeExpiredToken({ user: this, token });
+          return token;
+        }
+      },
+      virtuals: {
+        tasks: {
+          options: { foreignField: 'owner', localField: '_id', ref: 'Task' }
+        }
+      },
+      timestamps: true
+    }
+  )
+    .pre('save', hashPasswordBeforeSave)
+    .post('deleteOne', deleteTasksAfterUser)
+);
+
+export function removeExpiredToken({ token, user }: UserWithToken) {
+  setTimeout(async () => {
+    user.tokens = user.tokens.filter(t => t.token !== token);
+    await user.save();
+  }, env.JWT_EXPIRES_IN);
+}
+
+export async function saveToken({ token, user }: UserWithToken) {
+  user.tokens = user.tokens.concat({ _id: new Types.ObjectId(), token });
+  await user.save();
+}
+
+export async function hashPasswordBeforeSave(this: UserDocument) {
+  if (this.isModified('password'))
+    this.password = await hashPassword(this.password);
+}
+
+export async function deleteTasksAfterUser(this: UserDocument) {
+  await Task.deleteMany({ owner: this._id });
+}
