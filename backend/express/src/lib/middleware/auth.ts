@@ -1,11 +1,11 @@
 import type { NextFunction, Response, Request } from 'express';
 
-import bcrypt from 'bcryptjs';
+import { compare } from 'bcryptjs';
 
 import { InvalidCredentialsError, InvalidJwtError } from '@/lib/error';
-import { UserModel } from '@/modules/models/user';
+import { User } from '@/modules/user/model';
+import { Headers } from '@/lib/util/types';
 import { verifyToken } from '@/lib/token';
-import { Headers } from '@/lib/util';
 
 export async function validateCredentials({
   password,
@@ -16,21 +16,21 @@ export async function validateCredentials({
   email?: string;
   token?: string;
 }) {
-  const { _id } = (token && verifyToken(token)) || { _id: undefined };
+  const { id } = (token && verifyToken(token)) || { id: undefined };
   const error = new InvalidCredentialsError();
   const [errors] = error.errors;
 
-  const user = await UserModel.findOne({
-    $or: [{ 'tokens.token': token, _id }, { email }]
+  const user = await User.findOne({
+    $or: [{ 'tokens.token': token, id }, { email }]
   });
 
   if (!user) {
-    errors.path = [token, email, _id].filter((v): v is string => Boolean(v));
+    errors.path = [token, email, id].filter((v): v is string => Boolean(v));
     throw error;
   }
 
   const { password: originalPassword, ...userWithoutPassword } = user;
-  if (password && !(await bcrypt.compare(password, originalPassword))) {
+  if (password && !(await compare(password, originalPassword))) {
     errors.path = [password, email].filter((v): v is string => Boolean(v));
     throw error;
   }
