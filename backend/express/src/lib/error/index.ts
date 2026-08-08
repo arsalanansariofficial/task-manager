@@ -1,4 +1,4 @@
-import type { Err } from '@/lib/util';
+import type { Err } from '@/lib/util/types';
 
 export class ApiError extends Error {
   constructor(
