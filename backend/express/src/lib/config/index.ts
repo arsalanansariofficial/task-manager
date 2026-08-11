@@ -10,8 +10,9 @@ export const envSchema = z.object({
   DATABASE_URL: z.url({ error: 'DATABASE_URL should be valid url.' }),
   JWT_EXPIRES_IN: z.coerce.number().default(60 * 60 * 1000),
   SALT: z.union([z.coerce.number(), z.string()]).default(8),
+  MAX_FILE_SIZE: z.coerce.number().default(10_000_000),
   UPLOAD_DIR: z.string().default('public'),
-  PORT: z.coerce.number().default(3000)
+  PORT: z.coerce.number().default(8080)
 });
 
 export const env = envSchema.parse(process.env);
