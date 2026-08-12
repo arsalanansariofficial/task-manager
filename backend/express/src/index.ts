@@ -3,13 +3,12 @@ import express from 'express';
 
 import { error } from '@/lib/middlewares/error';
 import { userRoutes } from '@/modules/user';
+import { taskRoutes } from '@/modules/task';
 import { env } from '@/lib/config';
-
-import { taskRoutes } from './modules/task';
 
 connect(env.DATABASE_URL);
 
-const app = express()
+export const app = express()
   .use(express.json())
   .use(userRoutes)
   .use(taskRoutes)
