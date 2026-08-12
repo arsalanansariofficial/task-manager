@@ -8,6 +8,70 @@ import { auth } from '@/lib/middlewares/auth';
 export const userRoutes = Router();
 
 userRoutes.post(
+  '/users/upload-profile-picture',
+  auth,
+  upload.single('uploadProfile'),
+  async (
+    request: Request,
+    response: Response<User['userResponse']['user']>
+  ) => {
+    const user = await userService.uploadProfilePicture({
+      file: request.file,
+      user: request.user
+    });
+
+    return response
+      .status(200)
+      .json(userModel.userResponse.shape.user.parse(user));
+  }
+);
+
+userRoutes.post(
+  '/users/logoutAll',
+  auth,
+  async (request: Request, response: Response<User['success']>) => {
+    await userService.logoutAll(request.user);
+    response
+      .status(200)
+      .json(
+        userModel.success.parse({
+          message: 'All sessions have been revoked.',
+          success: true
+        })
+      );
+  }
+);
+
+userRoutes.delete(
+  '/users/delete-profile-picture',
+  auth,
+  async (
+    request: Request,
+    response: Response<User['userResponse']['user']>
+  ) => {
+    await userService.deleteProfilePicture(request.user);
+    response
+      .status(200)
+      .json(userModel.userResponse.shape.user.parse(request.user));
+  }
+);
+
+userRoutes.patch(
+  '/users/update-profile',
+  auth,
+  async (
+    request: Request<object, object, User['userPayload']>,
+    response: Response<User['userResponse']['user']>
+  ) => {
+    const user = await userService.updateUser({
+      payload: userModel.userPayload.parse(request.body),
+      user: request.user
+    });
+    response.status(201).json(userModel.userResponse.shape.user.parse(user));
+  }
+);
+
+userRoutes.post(
   '/users',
   async (
     request: Request<object, object, User['userPayload']>,
@@ -33,64 +97,15 @@ userRoutes.post(
   }
 );
 
-userRoutes.post(
-  '/users/logout',
-  auth,
-  async (request: Request, response: Response<User['success']>) => {
-    await userService.logout({ token: request.token, user: request.user });
-    response
-      .status(200)
-      .send({ message: 'User has been logged out.', success: true });
-  }
-);
-
-userRoutes.post(
-  '/users/logoutAll',
-  auth,
-  async (request: Request, response: Response<User['success']>) => {
-    await userService.logoutAll(request.user);
-    response
-      .status(200)
-      .json(
-        userModel.success.parse({
-          message: 'All sessions have been revoked.',
-          success: true
-        })
-      );
-  }
-);
-
 userRoutes.get(
-  '/users/view-profile',
-  auth,
-  async (request: Request, response: Response<User['user']>) => {
-    response.status(200).json(userModel.user.parse(request.user));
-  }
-);
-
-userRoutes.get(
-  '/users/:id',
+  '/users/:id/view-profile-picture',
   async (
     request: Request<{ id: string }>,
-    response: Response<User['userResponse']['user']>
+    response: Response<Buffer<ArrayBuffer>>
   ) => {
-    const user = await userService.getUserById(request.params.id);
-    response.status(200).json(userModel.userResponse.shape.user.parse(user));
-  }
-);
-
-userRoutes.patch(
-  '/users/update-profile',
-  auth,
-  async (
-    request: Request<object, object, User['userPayload']>,
-    response: Response<User['userResponse']['user']>
-  ) => {
-    const user = await userService.updateUser({
-      payload: userModel.userPayload.parse(request.body),
-      user: request.user
-    });
-    response.status(201).json(userModel.userResponse.shape.user.parse(user));
+    const buffer = await userService.getUserProfile(request.params.id);
+    response.set('content-type', 'image/png;image/jpg;image/jpeg');
+    response.status(200).send(buffer);
   }
 );
 
@@ -106,47 +121,32 @@ userRoutes.delete(
   }
 );
 
-userRoutes.post(
-  '/users/upload-profile-picture',
-  auth,
-  upload.single('uploadProfile'),
+userRoutes.get(
+  '/users/:id',
   async (
-    request: Request,
+    request: Request<{ id: string }>,
     response: Response<User['userResponse']['user']>
   ) => {
-    const user = await userService.uploadProfilePicture({
-      file: request.file,
-      user: request.user
-    });
-
-    return response
-      .status(200)
-      .json(userModel.userResponse.shape.user.parse(user));
+    const user = await userService.getUserById(request.params.id);
+    response.status(200).json(userModel.userResponse.shape.user.parse(user));
   }
 );
 
-userRoutes.delete(
-  '/users/delete-profile-picture',
+userRoutes.post(
+  '/users/logout',
   auth,
-  async (
-    request: Request,
-    response: Response<User['userResponse']['user']>
-  ) => {
-    await userService.deleteProfilePicture(request.user);
+  async (request: Request, response: Response<User['success']>) => {
+    await userService.logout({ token: request.token, user: request.user });
     response
       .status(200)
-      .json(userModel.userResponse.shape.user.parse(request.user));
+      .send({ message: 'User has been logged out.', success: true });
   }
 );
 
 userRoutes.get(
-  '/users/:id/view-profile-picture',
-  async (
-    request: Request<{ id: string }>,
-    response: Response<Buffer<ArrayBuffer>>
-  ) => {
-    const buffer = await userService.getUserProfile(request.params.id);
-    response.set('content-type', 'image/png;image/jpg;image/jpeg');
-    response.status(200).send(buffer);
+  '/users/view-profile',
+  auth,
+  async (request: Request, response: Response<User['user']>) => {
+    response.status(200).json(userModel.user.parse(request.user));
   }
 );
