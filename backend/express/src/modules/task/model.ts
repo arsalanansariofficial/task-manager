@@ -13,7 +13,11 @@ export const task = z.object({
   _id: z.instanceof(Types.ObjectId)
 });
 
-export const taskModel = { tasks: z.array(task), task } as const;
+export const taskModel = {
+  taskPayload: task.partial(),
+  tasks: z.array(task),
+  task
+} as const;
 
 export const Task = model(
   'Task',
