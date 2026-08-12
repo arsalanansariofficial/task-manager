@@ -39,6 +39,18 @@ export class InvalidFileTypeError extends ApiError {
   }
 }
 
+export class UserNotFoundError extends ApiError {
+  constructor(
+    public override errors: [Err, ...Array<Err>] = [
+      { message: 'User with the id does not exist.', path: ['id'] }
+    ],
+    public override message = 'User not found.',
+    public override status = 400
+  ) {
+    super();
+  }
+}
+
 export class InvalidJwtError extends ApiError {
   constructor(
     public override errors: [Err, ...Array<Err>] = [
