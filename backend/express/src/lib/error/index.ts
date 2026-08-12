@@ -26,6 +26,19 @@ export class InvalidCredentialsError extends ApiError {
     super();
   }
 }
+
+export class InvalidFileTypeError extends ApiError {
+  constructor(
+    public override errors: [Err, ...Array<Err>] = [
+      { message: 'File should be valid image format.', path: ['image'] }
+    ],
+    public override message = 'Invalid image file type.',
+    public override status = 401
+  ) {
+    super();
+  }
+}
+
 export class InvalidJwtError extends ApiError {
   constructor(
     public override errors: [Err, ...Array<Err>] = [
