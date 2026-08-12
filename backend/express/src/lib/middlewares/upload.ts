@@ -1,3 +1,4 @@
+import path from 'node:path';
 import multer from 'multer';
 
 import { InvalidFileTypeError } from '@/lib/error';
@@ -17,6 +18,11 @@ export const upload = multer({
 
     callback(null, true);
   },
-  limits: { fileSize: env.MAX_FILE_SIZE },
-  dest: 'public/images'
+  storage: multer.diskStorage({
+    filename(request, file, callback) {
+      callback(null, `${request.user._id}${path.extname(file.originalname)}`);
+    },
+    destination: env.UPLOAD_DIR
+  }),
+  limits: { fileSize: env.MAX_FILE_SIZE }
 });
