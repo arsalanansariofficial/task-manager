@@ -1,4 +1,40 @@
-import { type UserDocument, User } from '@/modules/user/model';
+import { type UserDocument, userModel, User } from '@/modules/user/model';
+import { bufferFromFile, removeFile } from '@/lib/file';
+import { UserNotFoundError } from '@/lib/error';
+
+async function getUserProfile(id: string) {
+  const user = await User.findById(id);
+
+  if (!user || !user.profilePicture)
+    throw new UserNotFoundError([
+      { message: `User with id ${id} does not exist.`, path: [id] }
+    ]);
+
+  return await bufferFromFile(user.profilePicture);
+}
+
+async function getUserById(id: string) {
+  const user = await User.findById(id);
+
+  if (!user)
+    throw new UserNotFoundError([
+      { message: `User with id ${id} does not exist.`, path: [id] }
+    ]);
+
+  return user;
+}
+
+async function uploadProfilePicture({
+  file,
+  user
+}: {
+  file: { filename: string } | undefined;
+  user: UserDocument;
+}) {
+  if (!file) return user;
+  user.profilePicture = file.filename;
+  return await user.save();
+}
 
 async function login({ password, email }: User['userPayload']) {
   const user = await User.validateCredentials({ password, email });
@@ -13,6 +49,23 @@ async function logout({ token, user }: { user: UserDocument; token: string }) {
   });
 }
 
+async function updateUser({
+  payload,
+  user
+}: {
+  payload: User['userPayload'];
+  user: UserDocument;
+}) {
+  user.set(userModel.userPayload.parse(payload));
+  return await user.save();
+}
+
+async function deleteProfilePicture(user: UserDocument) {
+  await removeFile(user.profilePicture);
+  user.profilePicture = undefined;
+  await user.save();
+}
+
 async function create(payload: User['userPayload']) {
   const user = new User(payload);
   const token = await user.addToken();
@@ -23,4 +76,19 @@ async function logoutAll(user: UserDocument) {
   return await user.updateOne({ _id: user._id, tokens: [] });
 }
 
-export const userService = { logoutAll, create, logout, login };
+async function deleteUser(user: UserDocument) {
+  await user.deleteOne();
+}
+
+export const userService = {
+  uploadProfilePicture,
+  deleteProfilePicture,
+  getUserProfile,
+  getUserById,
+  updateUser,
+  deleteUser,
+  logoutAll,
+  create,
+  logout,
+  login
+};

@@ -44,8 +44,7 @@ export const user = z.object({
     .trim(),
   age: z.coerce
     .number({ error: 'Age should be valid.' })
-    .positive({ error: 'Age should be positive.' })
-    .default(0),
+    .positive({ error: 'Age should be positive.' }),
   name: z
     .string('Name should be valid.')
     .nonempty('Name is required.')
@@ -55,8 +54,8 @@ export const user = z.object({
     z.object({ _id: z.instanceof(Types.ObjectId), token: z.string() })
   ),
   email: z.email('Email should be valid.').trim().toLowerCase(),
-  _id: z.instanceof(Types.ObjectId),
-  imageUrl: z.string().optional()
+  profilePicture: z.string().optional(),
+  _id: z.instanceof(Types.ObjectId)
 });
 
 const success = z.object({
@@ -78,17 +77,6 @@ export const User = model<User['user'], UserModel>(
   'User',
   new Schema<User['user'], UserModel, UserMethods>(
     {
-      age: {
-        validate(value: number) {
-          return z.coerce
-            .number({ error: 'Age should be valid.' })
-            .positive({ error: 'Age should be positive.' })
-            .default(0)
-            .parse(value);
-        },
-        type: Number,
-        default: 0
-      },
       email: {
         validate(value: string) {
           return userModel.user.shape.email.parse(value);
@@ -109,9 +97,15 @@ export const User = model<User['user'], UserModel>(
         minLength: 8,
         trim: true
       },
+      age: {
+        validate(value: number) {
+          return userModel.userPayload.shape.age.parse(value);
+        },
+        type: Number
+      },
       name: { lowercase: true, required: true, type: String, trim: true },
       tokens: [{ token: { type: String } }],
-      imageUrl: { type: String }
+      profilePicture: { type: String }
     },
     {
       statics: {
