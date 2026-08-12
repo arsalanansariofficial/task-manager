@@ -51,6 +51,18 @@ export class UserNotFoundError extends ApiError {
   }
 }
 
+export class TaskNotFoundError extends ApiError {
+  constructor(
+    public override errors: [Err, ...Array<Err>] = [
+      { message: 'Task with the id does not exist.', path: ['id'] }
+    ],
+    public override message = 'Task not found.',
+    public override status = 400
+  ) {
+    super();
+  }
+}
+
 export class InvalidJwtError extends ApiError {
   constructor(
     public override errors: [Err, ...Array<Err>] = [
