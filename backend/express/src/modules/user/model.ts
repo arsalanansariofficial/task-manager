@@ -15,7 +15,7 @@ export type UserStatics = {
     password?: string;
     email?: string;
     token?: string;
-  }): Promise<Omit<UserDocument, 'password'>>;
+  }): Promise<UserDocument>;
 };
 
 export type UserMethods = {
@@ -59,12 +59,18 @@ export const user = z.object({
   imageUrl: z.string().optional()
 });
 
+const success = z.object({
+  message: z.string({ error: 'Message should be valid.' }),
+  success: z.boolean().default(true)
+});
+
 export const userModel = {
   userResponse: z.object({
     user: user.omit({ password: true, tokens: true }),
     token: z.string()
   }),
   userPayload: user.partial(),
+  success,
   user
 };
 
@@ -110,16 +116,16 @@ export const User = model<User['user'], UserModel>(
     {
       statics: {
         async validateCredentials({ password, email, token }) {
-          const { id } = (token && verifyToken(token)) || { id: undefined };
+          const { _id } = (token && verifyToken(token)) || { _id: undefined };
           const error = new InvalidCredentialsError();
           const [errors] = error.errors;
 
           const user = await this.findOne({
-            $or: [{ 'tokens.token': token, id }, { email }]
+            $or: [{ 'tokens.token': token, _id }, { email }]
           });
 
           if (!user) {
-            errors.path = [token, email, id].filter((v): v is string =>
+            errors.path = [token, email, _id].filter((v): v is string =>
               Boolean(v)
             );
             throw error;
