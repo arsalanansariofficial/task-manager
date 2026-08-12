@@ -14,7 +14,6 @@ export function error(
   response: Response,
   _next: NextFunction
 ) {
-  console.dir(error);
   let apiError: ApiError;
 
   if (error instanceof ApiError)
