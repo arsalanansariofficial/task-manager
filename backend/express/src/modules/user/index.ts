@@ -122,6 +122,14 @@ userRoutes.delete(
 );
 
 userRoutes.get(
+  '/users/view-profile',
+  auth,
+  async (request: Request, response: Response<User['user']>) => {
+    response.status(200).json(userModel.user.parse(request.user));
+  }
+);
+
+userRoutes.get(
   '/users/:id',
   async (
     request: Request<{ id: string }>,
@@ -140,13 +148,5 @@ userRoutes.post(
     response
       .status(200)
       .send({ message: 'User has been logged out.', success: true });
-  }
-);
-
-userRoutes.get(
-  '/users/view-profile',
-  auth,
-  async (request: Request, response: Response<User['user']>) => {
-    response.status(200).json(userModel.user.parse(request.user));
   }
 );
