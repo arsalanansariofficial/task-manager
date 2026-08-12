@@ -1,5 +1,14 @@
 import z from 'zod';
 
+import type { UserDocument } from '@/modules/user/model';
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    user: UserDocument;
+    token: string;
+  }
+}
+
 export enum Headers {
   Authorization = 'Authorization',
   Bearer = 'Bearer'
