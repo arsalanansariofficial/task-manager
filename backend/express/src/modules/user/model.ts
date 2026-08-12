@@ -2,7 +2,7 @@ import { type HydratedDocument, Schema, Model, Types, model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import z from 'zod';
 
-import type { ModelType } from '@/lib/util/types';
+import type { OptionalFields, ModelType } from '@/lib/util/types';
 
 import { generateToken, verifyToken } from '@/lib/token';
 import { InvalidCredentialsError } from '@/lib/error';
@@ -10,16 +10,22 @@ import { Task } from '@/modules/task/model';
 import { hashPassword } from '@/lib/util';
 import { env } from '@/lib/config';
 
-export type UserModel = Model<
-  UserDocument,
-  object,
-  object,
-  object,
-  { tokens: Types.DocumentArray<TokenDocument> } & UserDocument
->;
+export type UserStatics = {
+  validateCredentials(payload: {
+    password?: string;
+    email?: string;
+    token?: string;
+  }): Promise<Omit<UserDocument, 'password'>>;
+};
+
+export type UserMethods = {
+  toJSON(): Omit<User['user'], 'password' | 'tokens'>;
+  addToken(): Promise<string>;
+};
+export type UserModel = Model<User['user'], object, UserMethods> & UserStatics;
 export type TokenDocument = HydratedDocument<User['user']['tokens'][0]>;
+export type UserDocument = HydratedDocument<User['user'], UserMethods>;
 export type UserWithToken = { user: UserDocument; token: string };
-export type UserDocument = HydratedDocument<User['user']>;
 export type User = ModelType<typeof userModel>;
 
 export const user = z.object({
@@ -53,11 +59,18 @@ export const user = z.object({
   imageUrl: z.string().optional()
 });
 
-export const userModel = { user };
+export const userModel = {
+  userResponse: z.object({
+    user: user.omit({ password: true, tokens: true }),
+    token: z.string()
+  }),
+  userPayload: user.partial(),
+  user
+};
 
-export const User = model(
+export const User = model<User['user'], UserModel>(
   'User',
-  new Schema<UserDocument, UserModel>(
+  new Schema<User['user'], UserModel, UserMethods>(
     {
       age: {
         validate(value: number) {
@@ -70,16 +83,6 @@ export const User = model(
         type: Number,
         default: 0
       },
-      password: {
-        validate(value: string) {
-          return userModel.user.shape.password.parse(value);
-        },
-        required: true,
-        select: false,
-        type: String,
-        minLength: 8,
-        trim: true
-      },
       email: {
         validate(value: string) {
           return userModel.user.shape.email.parse(value);
@@ -90,21 +93,23 @@ export const User = model(
         unique: true,
         trim: true
       },
+      password: {
+        validate(value: string) {
+          return userModel.user.shape.password.parse(value);
+        },
+        required: true,
+
+        type: String,
+        minLength: 8,
+        trim: true
+      },
       name: { lowercase: true, required: true, type: String, trim: true },
-      tokens: [{ token: { select: false, type: String } }],
+      tokens: [{ token: { type: String } }],
       imageUrl: { type: String }
     },
     {
       statics: {
-        async validateCredentials({
-          password,
-          email,
-          token
-        }: {
-          password?: string;
-          email?: string;
-          token?: string;
-        }) {
+        async validateCredentials({ password, email, token }) {
           const { id } = (token && verifyToken(token)) || { id: undefined };
           const error = new InvalidCredentialsError();
           const [errors] = error.errors;
@@ -120,18 +125,26 @@ export const User = model(
             throw error;
           }
 
-          const { password: originalPassword, ...userWithoutPassword } = user;
-          if (password && !(await bcrypt.compare(password, originalPassword))) {
+          if (password && !(await bcrypt.compare(password, user.password))) {
             errors.path = [password, email].filter((v): v is string =>
               Boolean(v)
             );
             throw error;
           }
 
-          return userWithoutPassword;
+          return user;
         }
       },
       methods: {
+        toJSON() {
+          const userObject = this.toObject() as OptionalFields<
+            User['user'],
+            'password' | 'tokens'
+          >;
+          delete userObject.password;
+          delete userObject.tokens;
+          return userObject;
+        },
         async addToken() {
           const token = generateToken(this.id);
           await saveToken({ user: this, token });
