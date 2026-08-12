@@ -8,6 +8,7 @@ import { generateToken, verifyToken } from '@/lib/token';
 import { InvalidCredentialsError } from '@/lib/error';
 import { Task } from '@/modules/task/model';
 import { hashPassword } from '@/lib/util';
+import { removeFile } from '@/lib/file';
 import { env } from '@/lib/config';
 
 export type UserStatics = {
@@ -161,7 +162,7 @@ export const User = model<User['user'], UserModel>(
     }
   )
     .pre('save', hashPasswordBeforeSave)
-    .post('deleteOne', deleteTasksAfterUser)
+    .pre('deleteOne', { document: true, query: false }, deleteTasksAfterUser)
 );
 
 export function removeExpiredToken({ token, user }: UserWithToken) {
@@ -183,4 +184,5 @@ export async function hashPasswordBeforeSave(this: UserDocument) {
 
 export async function deleteTasksAfterUser(this: UserDocument) {
   await Task.deleteMany({ owner: this._id });
+  await removeFile(this.profilePicture);
 }
