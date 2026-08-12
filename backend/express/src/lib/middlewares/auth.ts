@@ -38,7 +38,7 @@ export async function validateCredentials({
   return userWithoutPassword;
 }
 
-export default async function auth(
+export async function auth(
   request: { user: Record<string, unknown>; token: string } & Request,
   _response: Response,
   next: NextFunction
