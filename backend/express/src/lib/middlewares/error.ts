@@ -2,11 +2,9 @@ import type { NextFunction, Response, Request } from 'express';
 
 import { ZodError } from 'zod';
 
-import type { Err } from '@/lib/util/types';
-
+import { HttpStatusCodes, type Err } from '@/lib/util/types';
+import { isMongoServerError } from '@/lib/util';
 import { ApiError } from '@/lib/error';
-
-import { isMongoServerError } from '../util';
 
 export function error(
   error: Error,
@@ -26,7 +24,7 @@ export function error(
         path: issue.path
       })) as [Err, ...Array<Err>],
       error.name,
-      400
+      HttpStatusCodes.badRequest
     );
 
     return response.status(apiError.status).json(apiError);
@@ -39,7 +37,7 @@ export function error(
         path: [key]
       })) as [Err, ...Err[]],
       'Duplicate key',
-      400
+      HttpStatusCodes.badRequest
     );
 
     return response.status(apiError.status).json(apiError);

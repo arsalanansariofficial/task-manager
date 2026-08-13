@@ -1,4 +1,4 @@
-import type { Err } from '@/lib/util/types';
+import { HttpStatusCodes, type Err } from '@/lib/util/types';
 
 export class ApiError extends Error {
   constructor(
@@ -6,7 +6,7 @@ export class ApiError extends Error {
       { message: 'An unknown error occurred.', path: ['unknown'] }
     ],
     public override message = 'An unknown error occurred.',
-    public status = 500
+    public status = HttpStatusCodes.internalServerError
   ) {
     super();
   }
@@ -21,7 +21,7 @@ export class InvalidCredentialsError extends ApiError {
       }
     ],
     public override message = 'Invalid credentials.',
-    public override status = 400
+    public override status = HttpStatusCodes.badRequest
   ) {
     super();
   }
@@ -33,7 +33,7 @@ export class InvalidFileTypeError extends ApiError {
       { message: 'File should be valid image format.', path: ['image'] }
     ],
     public override message = 'Invalid image file type.',
-    public override status = 401
+    public override status = HttpStatusCodes.unAuthenticated
   ) {
     super();
   }
@@ -45,7 +45,7 @@ export class UserNotFoundError extends ApiError {
       { message: 'User with the id does not exist.', path: ['id'] }
     ],
     public override message = 'User not found.',
-    public override status = 400
+    public override status = HttpStatusCodes.badRequest
   ) {
     super();
   }
@@ -57,7 +57,7 @@ export class TaskNotFoundError extends ApiError {
       { message: 'Task with the id does not exist.', path: ['id'] }
     ],
     public override message = 'Task not found.',
-    public override status = 400
+    public override status = HttpStatusCodes.badRequest
   ) {
     super();
   }
@@ -69,7 +69,7 @@ export class InvalidJwtError extends ApiError {
       { message: 'Either jwt invalid or expired.', path: ['jwt'] }
     ],
     public override message = 'Invalid jwt.',
-    public override status = 401
+    public override status = HttpStatusCodes.unAuthenticated
   ) {
     super();
   }
