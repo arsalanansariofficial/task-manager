@@ -1,12 +1,15 @@
-import { type HydratedDocument, Schema, model } from 'mongoose';
+import { type HydratedDocument, Schema, Model, model } from 'mongoose';
 import z from 'zod';
 
 import type { ModelType } from '@/lib/util/types';
 
 import { _id } from '@/lib/util';
 
+export type TaskModel = Model<Task['task'], object, TaskMethods> & TaskStatics;
 export type TaskDocument = HydratedDocument<Task['task']>;
 export type Task = ModelType<typeof taskModel>;
+export type TaskStatics = object;
+export type TaskMethods = object;
 
 export const task = z.object({
   description: z.string({ error: 'Description should be valid.' }),
@@ -21,9 +24,9 @@ export const taskModel = {
   task
 } as const;
 
-export const Task = model(
+export const Task = model<Task['task'], TaskModel>(
   'Task',
-  new Schema<TaskDocument>(
+  new Schema<Task['task'], TaskModel, TaskMethods>(
     {
       owner: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
       description: { required: true, type: String, trim: true },
