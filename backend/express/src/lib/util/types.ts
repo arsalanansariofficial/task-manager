@@ -9,6 +9,14 @@ declare module 'express-serve-static-core' {
   }
 }
 
+export enum HttpStatusCodes {
+  internalServerError = 500,
+  unAuthenticated = 401,
+  badRequest = 400,
+  created = 201,
+  ok = 200
+}
+
 export enum Headers {
   Authorization = 'Authorization',
   Bearer = 'Bearer'
