@@ -25,7 +25,6 @@ export type UserStatics = {
     token?: string;
   }): Promise<UserDocument>;
 };
-
 export type UserMethods = {
   toJSON(): Omit<User['user'], 'password' | 'tokens'>;
   addToken(): Promise<string>;
@@ -186,14 +185,16 @@ export async function saveToken({ token, user }: UserWithToken) {
   await user.save();
 }
 
+export async function deleteTasksAfterUser(this: UserDocument) {
+  await cleanUserProfile({
+    profilePicture: this.profilePicture,
+    owner: this._id
+  });
+}
+
 export async function hashPasswordBeforeSave(this: UserDocument) {
   if (this.isModified('password'))
     this.password = await hashPassword(this.password);
-}
-
-export async function deleteTasksAfterUser(this: UserDocument) {
-  await Task.deleteMany({ owner: this._id });
-  await removeFile(this.profilePicture);
 }
 
 async function deleteTasksAfterUsers(
@@ -203,9 +204,23 @@ async function deleteTasksAfterUsers(
   const users = await this.model.find(filter);
 
   await Promise.all(
-    users.map(async u => {
-      await Task.deleteMany({ owner: u._id });
-      await removeFile(u.profilePicture);
-    })
+    users.map(
+      async u =>
+        await cleanUserProfile({
+          profilePicture: u.profilePicture,
+          owner: u._id
+        })
+    )
   );
+}
+
+async function cleanUserProfile({
+  profilePicture,
+  owner
+}: {
+  profilePicture?: undefined | string;
+  owner: Types.ObjectId | string;
+}) {
+  await Task.deleteMany({ owner });
+  await removeFile(profilePicture);
 }
