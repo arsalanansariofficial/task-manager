@@ -4,7 +4,11 @@ import multer from 'multer';
 import { InvalidFileTypeError } from '@/lib/error';
 import { env } from '@/lib/config';
 
-const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/jpg']);
+export const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/jpg'
+]);
 
 export const upload = multer({
   fileFilter(_, file, callback) {
