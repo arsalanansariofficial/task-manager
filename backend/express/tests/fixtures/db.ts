@@ -4,10 +4,9 @@ import { User } from '@/modules/user/model';
 import { Task } from '@/modules/task/model';
 import { generateToken } from '@/lib/token';
 
-export type UserWithToken = Omit<
-  User['user'],
-  'age'
-> & { tokens: [User['token']] };
+export type UserWithToken = {
+  tokens: [User['token']];
+} & Omit<User['user'], 'age'>;
 
 export type Response = { body: { user: User['user']; token: string } };
 export type LoggedInUser = { tokens: [User['token'], User['token']] };

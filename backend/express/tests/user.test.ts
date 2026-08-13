@@ -10,7 +10,7 @@ import {
   kevin,
   gwen,
   ben
-} from '~/tests/fixtures/db';
+} from '@/tests/fixtures/db';
 import { User } from '@/modules/user/model';
 import { app } from '@/index';
 

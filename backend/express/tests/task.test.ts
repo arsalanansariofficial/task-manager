@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from 'bun:test';
 import request from 'supertest';
 
-import { gwensTasks, setupDb, newTask, ben } from '~/tests/fixtures/db';
+import { gwensTasks, setupDb, newTask, ben } from '@/tests/fixtures/db';
 import { Task } from '@/modules/task/model';
 import { app } from '@/index';
 
