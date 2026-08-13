@@ -1,4 +1,11 @@
-import { type HydratedDocument, Schema, Model, Types, model } from 'mongoose';
+import {
+  type HydratedDocument,
+  Schema,
+  Model,
+  Types,
+  model,
+  Query
+} from 'mongoose';
 import bcrypt from 'bcryptjs';
 import z from 'zod';
 
@@ -6,8 +13,8 @@ import type { OptionalFields, ModelType } from '@/lib/util/types';
 
 import { generateToken, verifyToken } from '@/lib/token';
 import { InvalidCredentialsError } from '@/lib/error';
+import { hashPassword, _id } from '@/lib/util';
 import { Task } from '@/modules/task/model';
-import { hashPassword } from '@/lib/util';
 import { removeFile } from '@/lib/file';
 import { env } from '@/lib/config';
 
@@ -28,6 +35,8 @@ export type TokenDocument = HydratedDocument<User['user']['tokens'][0]>;
 export type UserDocument = HydratedDocument<User['user'], UserMethods>;
 export type UserWithToken = { user: UserDocument; token: string };
 export type User = ModelType<typeof userModel>;
+
+const token = z.object({ token: z.string(), _id });
 
 export const user = z.object({
   password: z
@@ -51,12 +60,10 @@ export const user = z.object({
     .nonempty('Name is required.')
     .trim()
     .toLowerCase(),
-  tokens: z.array(
-    z.object({ _id: z.instanceof(Types.ObjectId), token: z.string() })
-  ),
   email: z.email('Email should be valid.').trim().toLowerCase(),
   profilePicture: z.string().optional(),
-  _id: z.instanceof(Types.ObjectId)
+  tokens: z.array(token),
+  _id
 });
 
 const success = z.object({
@@ -66,11 +73,12 @@ const success = z.object({
 
 export const userModel = {
   userResponse: z.object({
-    user: user.omit({ password: true, tokens: true }),
+    user: user.omit({ password: true, tokens: true }).partial(),
     token: z.string()
   }),
   userPayload: user.partial(),
   success,
+  token,
   user
 };
 
@@ -161,8 +169,9 @@ export const User = model<User['user'], UserModel>(
       timestamps: true
     }
   )
-    .pre('save', hashPasswordBeforeSave)
     .pre('deleteOne', { document: true, query: false }, deleteTasksAfterUser)
+    .pre('deleteMany', deleteTasksAfterUsers)
+    .pre('save', hashPasswordBeforeSave)
 );
 
 export function removeExpiredToken({ token, user }: UserWithToken) {
@@ -185,4 +194,18 @@ export async function hashPasswordBeforeSave(this: UserDocument) {
 export async function deleteTasksAfterUser(this: UserDocument) {
   await Task.deleteMany({ owner: this._id });
   await removeFile(this.profilePicture);
+}
+
+async function deleteTasksAfterUsers(
+  this: Query<object, object, object, unknown, 'find', UserDocument>
+) {
+  const filter = this.getFilter();
+  const users = await this.model.find(filter);
+
+  await Promise.all(
+    users.map(async u => {
+      await Task.deleteMany({ owner: u._id });
+      await removeFile(u.profilePicture);
+    })
+  );
 }

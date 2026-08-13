@@ -124,8 +124,8 @@ userRoutes.delete(
 userRoutes.get(
   '/users/view-profile',
   auth,
-  async (request: Request, response: Response<User['user']>) => {
-    response.status(200).json(userModel.user.parse(request.user));
+  async (request: Request, response: Response<User['userPayload']>) => {
+    response.status(200).json(userModel.userPayload.parse(request.user));
   }
 );
 

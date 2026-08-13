@@ -5,6 +5,26 @@ import type { UserDocument } from '@/modules/user/model';
 import { TaskNotFoundError } from '@/lib/error';
 import { Task } from '@/modules/task/model';
 
+async function updateTask({
+  payload,
+  userId,
+  _id
+}: {
+  userId: Types.ObjectId | string;
+  payload: Task['taskPayload'];
+  _id: string;
+}) {
+  const task = await Task.findOne({ owner: userId, _id });
+
+  if (!task)
+    throw new TaskNotFoundError([
+      { message: `Task with id ${_id} does not exist.`, path: [_id] }
+    ]);
+
+  task.set(payload);
+  return await task.save();
+}
+
 async function getTasks({
   query,
   user
@@ -23,31 +43,11 @@ async function getTasks({
   });
 }
 
-async function updateTask({
-  payload,
-  userId,
-  _id
-}: {
-  payload: Task['taskPayload'];
-  userId: Types.ObjectId;
-  _id: string;
-}) {
-  const task = await Task.findOne({ owner: userId, _id });
-
-  if (!task)
-    throw new TaskNotFoundError([
-      { message: `Task with id ${_id} does not exist.`, path: [_id] }
-    ]);
-
-  task.set(payload);
-  return await task.save();
-}
-
 async function deleteTaskById({
   userId,
   _id
 }: {
-  userId: Types.ObjectId;
+  userId: Types.ObjectId | string;
   _id: string;
 }) {
   const task = await Task.findOneAndDelete({ owner: userId, _id });
@@ -64,7 +64,7 @@ async function getTaskById({
   userId,
   _id
 }: {
-  userId: Types.ObjectId;
+  userId: Types.ObjectId | string;
   _id: string;
 }) {
   const task = await Task.findOne({ owner: userId, _id });
@@ -91,8 +91,8 @@ async function create({
   payload,
   userId
 }: {
+  userId: Types.ObjectId | string;
   payload: Task['taskPayload'];
-  userId: Types.ObjectId;
 }) {
   const task = new Task({ ...payload, owner: userId });
   await task.save();
