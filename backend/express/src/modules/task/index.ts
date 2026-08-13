@@ -2,6 +2,7 @@ import { type Response, type Request, Router } from 'express';
 
 import { taskModel, Task } from '@/modules/task/model';
 import { taskService } from '@/modules/task/service';
+import { HttpStatusCodes } from '@/lib/util/types';
 import { auth } from '@/lib/middlewares/auth';
 
 export const taskRoutes = Router();
@@ -48,7 +49,7 @@ taskRoutes.get(
       userId: request.user._id,
       _id: request.params.id
     });
-    response.status(200).json(taskModel.task.parse(task));
+    response.status(HttpStatusCodes.ok).json(taskModel.task.parse(task));
   }
 );
 
@@ -63,7 +64,7 @@ taskRoutes.post(
       payload: taskModel.taskPayload.parse(request.body),
       userId: request.user._id
     });
-    response.status(201).json(taskModel.task.parse(task));
+    response.status(HttpStatusCodes.created).json(taskModel.task.parse(task));
   }
 );
 
@@ -75,6 +76,6 @@ taskRoutes.get(
       query: request.query,
       user: request.user
     });
-    response.status(200).json(taskModel.tasks.parse(user.tasks));
+    response.status(HttpStatusCodes.ok).json(taskModel.tasks.parse(user.tasks));
   }
 );
