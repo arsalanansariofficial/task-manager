@@ -16,7 +16,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "test": "bun test --watch"
+    "test": "bun test --setup=tests/fixtures/disconnect.ts --watch"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
