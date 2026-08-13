@@ -13,21 +13,6 @@ export function verifyToken(payload: string) {
   }
 }
 
-export function hasValidAuthentication(value: unknown) {
-  return Boolean(
-    value &&
-    typeof value === 'object' &&
-    'tokens' in value &&
-    Array.isArray(value.tokens)
-  );
-}
-
 export function generateToken(payload: string, expiresIn = env.JWT_EXPIRES_IN) {
   return sign({ _id: payload }, env.JWT_SECRET, { expiresIn });
-}
-
-export function hasSuccess(value: unknown) {
-  return Boolean(
-    value && value instanceof Object && 'success' in value && value.success
-  );
 }
