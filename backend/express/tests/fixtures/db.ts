@@ -4,12 +4,10 @@ import { User } from '@/modules/user/model';
 import { Task } from '@/modules/task/model';
 import { generateToken } from '@/lib/token';
 
-export type UserWithToken = {
-  tokens: [User['token']];
-} & Omit<User['user'], 'age'>;
-
+export type UserWithToken = { tokens: [User['token']] } & UserWithoutAge;
 export type Response = { body: { user: User['user']; token: string } };
 export type LoggedInUser = { tokens: [User['token'], User['token']] };
+export type UserWithoutAge = Omit<User['user'], 'age'>;
 
 export const ben: UserWithToken = {
   tokens: [{ _id: new Types.ObjectId(), token: String() }],
