@@ -1,0 +1,48 @@
+#!/bin/sh
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+
+cd "$ROOT_DIR/backend/elysia" || {
+  echo "Could not find directory."
+  exit 1
+}
+
+echo "Running prettier fomat..."
+
+bunx prettier -w . || {
+  echo "Prettier formatting failed. Commit aborted."
+  exit 1
+}
+
+echo "Running ESLint..."
+
+bunx eslint --fix || {
+  echo "ESLint failed. Commit aborted."
+  exit 1
+}
+
+cd "$ROOT_DIR/backend/express" || {
+  echo "Could not find directory."
+  exit 1
+}
+
+echo "Running prettier fomat..."
+
+bunx prettier -w . || {
+  echo "Prettier formatting failed. Commit aborted."
+  exit 1
+}
+
+echo "Running ESLint..."
+
+bunx eslint --fix || {
+  echo "ESLint failed. Commit aborted."
+  exit 1
+}
+
+cd "$ROOT_DIR" || exit 1
+
+git add -u
+
+echo "Formatting and linting passed. Changes staged."
+exit 0
