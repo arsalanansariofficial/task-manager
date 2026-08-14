@@ -1,0 +1,32 @@
+#!/bin/sh
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+
+cd "$ROOT_DIR/backend/elysia" || {
+  echo "Could not find directory."
+  exit 1
+}
+
+echo "Running tests..."
+
+bun test || {
+  echo "Tests failed. Commit aborted."
+  exit 1
+}
+
+cd "$ROOT_DIR/backend/express" || {
+  echo "Could not find directory."
+  exit 1
+}
+
+echo "Running tests..."
+
+bun test || {
+  echo "Tests failed. Commit aborted."
+  exit 1
+}
+
+cd "$ROOT_DIR" || exit 1
+
+echo "Tests passed."
+exit 0
