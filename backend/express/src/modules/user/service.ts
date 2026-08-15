@@ -5,9 +5,14 @@ import { UserNotFoundError } from '@/lib/error';
 async function getUserProfile(id: string) {
   const user = await User.findById(id);
 
-  if (!user || !user.profilePicture)
+  if (!user)
     throw new UserNotFoundError([
       { message: `User with id ${id} does not exist.`, path: [id] }
+    ]);
+
+  if (!user.profilePicture)
+    throw new UserNotFoundError([
+      { message: `User doesn't have a profile picture.`, path: [id] }
     ]);
 
   return await bufferFromFile(user.profilePicture);
