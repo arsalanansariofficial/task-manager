@@ -9,7 +9,7 @@ Warnings:
 ALTER TABLE `User`
 DROP COLUMN `password`,
 DROP COLUMN `verifiedAt`,
-ADD COLUMN `emailVerified` BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN `emailVerified` BOOLEAN NOT NULL DEFAULT FALSE,
 ADD COLUMN `image` TEXT NULL,
 MODIFY `name` TEXT NOT NULL;
 
