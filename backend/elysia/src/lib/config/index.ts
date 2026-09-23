@@ -26,6 +26,26 @@ declare module 'bun' {
 
 export const envSchema = z.object(
   {
+    DATABASE_URL: z.union(
+      [
+        z
+          .url('DATABASE_URL should be a valid url.')
+          .nonempty('DATABASE_URL should not be empty.')
+          .trim()
+          .meta({
+            description:
+              'Database connection url, ex: mysql://user:password@localhost:3306/database-name'
+          }),
+        z
+          .string('DATABASE_URL should be a valid string.')
+          .nonempty('DATABASE_URL should not be empty.')
+          .trim()
+          .meta({
+            description: 'Database file, ex: database.sqlite or database.db'
+          })
+      ],
+      'DATABASE_URL should either be a valid url or a valid file name if using file based database.'
+    ),
     BETTER_AUTH_SECRET: z
       .string('BETTER_AUTH_SECRET should be a valid string.')
       .nonempty('BETTER_AUTH_SECRET should not be empty.')
@@ -116,14 +136,6 @@ export const envSchema = z.object(
       .default('task-manager')
       .meta({
         description: 'Name of the application, defaults to task-manager.'
-      }),
-    DATABASE_URL: z
-      .url('DATABASE_URL should be a valid url.')
-      .nonempty('DATABASE_URL should not be empty.')
-      .trim()
-      .meta({
-        description:
-          'Database connection url, ex: mysql://user:password@localhost:3306/database-name'
       }),
     SMTP_URL: z
       .url('SMTP_URL should be a valid url.')
