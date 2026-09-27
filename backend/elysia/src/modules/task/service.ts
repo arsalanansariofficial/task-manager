@@ -1,13 +1,15 @@
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { and, eq } from 'drizzle-orm';
 
 import type { Payload } from '@/modules/task/payload';
 
+import { type SchemaSelect, task } from '@/lib/db/schema';
 import { TaskNotFoundError } from '@/lib/error';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 async function get({ userId, id }: { userId: string; id?: string }) {
   if (id) {
-    const task = await prisma.task.findUnique({ where: { userId, id } });
+    const task = await db.query.task.findFirst({ where: { userId, id } });
+
     if (!task)
       throw new TaskNotFoundError([
         {
@@ -15,38 +17,47 @@ async function get({ userId, id }: { userId: string; id?: string }) {
           path: [id, userId]
         }
       ]);
+
     return task;
   }
 
-  return await prisma.task.findMany({ where: { userId } });
+  return await db.query.task.findMany({ where: { userId } });
 }
 
 async function deleteTask({ userId, id }: { userId: string; id: string }) {
-  try {
-    return await prisma.task.delete({ where: { userId, id } });
-  } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError)
-      throw new TaskNotFoundError([
-        {
-          message: `Requested task with ${id} for user ${userId} does not exist.`,
-          path: [id, userId]
-        }
-      ]);
-    throw error;
-  }
+  const [$task] = await db
+    .delete(task)
+    .where(and(eq(task.id, id), eq(task.userId, userId)))
+    .returning();
+
+  if (!$task)
+    throw new TaskNotFoundError([
+      {
+        message: `Requested task with ${id} for user ${userId} does not exist.`,
+        path: [id, userId]
+      }
+    ]);
+
+  return $task;
 }
 
 async function update(args: { payload: Payload['patchTask']; id: string }) {
-  return await prisma.task.update({
-    where: { id: args.id },
-    data: args.payload
-  });
+  const [$task] = await db
+    .update(task)
+    .set(args.payload)
+    .where(eq(task.id, args.id))
+    .returning();
+
+  return $task as SchemaSelect['task'];
 }
 
 async function create(args: { payload: Payload['task']; userId: string }) {
-  return await prisma.task.create({
-    data: { ...args.payload, userId: args.userId }
-  });
+  const [$task] = await db
+    .insert(task)
+    .values({ ...args.payload, userId: args.userId })
+    .returning();
+
+  return $task as SchemaSelect['task'];
 }
 
 export const taskService = { deleteTask, update, create, get };

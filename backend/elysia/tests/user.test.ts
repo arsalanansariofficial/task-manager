@@ -17,11 +17,7 @@ import { auth, ctx } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 describe('tests for user resource', () => {
-  afterAll(async () => {
-    await Promise.all([resetDb(), resetDisk()]);
-    db.$client.close();
-  });
-
+  afterAll(async () => await Promise.all([resetDb(), resetDisk()]));
   beforeEach(setupDb);
 
   test('should signup a new user', async () => {

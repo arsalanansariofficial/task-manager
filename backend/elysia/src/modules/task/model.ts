@@ -1,14 +1,13 @@
 import z from 'zod';
 
-import type { Task } from '~/generated/prisma/client';
 import type { ModelType } from '@/lib/util/types';
 
-import { Status } from '~/generated/prisma/enums';
+import { type SchemaSelect, Status } from '@/lib/db/schema';
 import { schema } from '@/lib/util/schema';
 
 export type Model = ModelType<typeof model>;
 
-const task = z.toZod<Task>()(
+const task = z.toZod<SchemaSelect['task']>()(
   z.object(
     {
       status: z
@@ -26,6 +25,8 @@ const task = z.toZod<Task>()(
   )
 );
 
-const tasks = z.array(task, 'tasks should be a valid array of task.');
+const tasks = z.toZod<SchemaSelect['task'][]>()(
+  z.array(task, 'tasks should be a valid array of task.')
+);
 
 export const model = { tasks, task } as const;

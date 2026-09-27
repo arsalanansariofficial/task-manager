@@ -2,7 +2,7 @@ import { mkdir, rm } from 'node:fs/promises';
 import { treaty } from '@elysia/eden';
 import { reset } from 'drizzle-seed';
 
-import { schema } from '@/lib/db/schema';
+import { schema, Status, task } from '@/lib/db/schema';
 import { env } from '@/lib/config';
 import { ctx } from '@/lib/auth';
 import { app } from '@/server';
@@ -45,7 +45,7 @@ export const kevin = {
 export const bensTasks = [
   {
     title: 'Learn about SwampFire',
-    status: 'incomplete' as const,
+    status: Status.incomplete,
     id: crypto.randomUUID(),
     userId: ben.id
   }
@@ -53,8 +53,8 @@ export const bensTasks = [
 
 export const gwensTasks = [
   {
-    status: 'incomplete' as const,
     title: 'Meet Charm Caster',
+    status: Status.incomplete,
     id: crypto.randomUUID(),
     userId: gwen.id
   }
@@ -62,7 +62,7 @@ export const gwensTasks = [
 
 export const kevinsTasks = [
   {
-    status: 'complete' as const,
+    status: Status.complete,
     id: crypto.randomUUID(),
     title: 'Stop aggregor',
     userId: kevin.id
@@ -80,10 +80,10 @@ export async function setupDb() {
     ctx.saveUser(ctx.createUser(kevin))
   ]);
 
-  await prisma.$transaction([
-    prisma.task.createMany({ data: bensTasks }),
-    prisma.task.createMany({ data: gwensTasks }),
-    prisma.task.createMany({ data: kevinsTasks })
+  await Promise.all([
+    db.insert(task).values(bensTasks),
+    db.insert(task).values(gwensTasks),
+    db.insert(task).values(kevinsTasks)
   ]);
 }
 
