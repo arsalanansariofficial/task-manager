@@ -1,6 +1,11 @@
 import { defineRelations } from 'drizzle-orm';
 import * as t from 'drizzle-orm/sqlite-core';
 
+export enum Status {
+  incomplete = 'incomplete',
+  complete = 'complete'
+}
+
 export enum Gender {
   female = 'female',
   male = 'male'
@@ -256,6 +261,18 @@ export const invitation = t.snakeCase.table(
   ]
 );
 
+export const task = t.snakeCase.table('task', {
+  userId: t
+    .text()
+    .references(() => user.id, { onDelete: 'cascade' })
+    .notNull(),
+  status: t.text().$type<Status>().default(Status.incomplete),
+  title: t.text().notNull(),
+  description: t.text(),
+  ...timestamps,
+  id
+});
+
 export const relations = defineRelations(
   {
     organizationRole,
@@ -268,6 +285,7 @@ export const relations = defineRelations(
     account,
     session,
     member,
+    task,
     user,
     team
   },
@@ -279,7 +297,8 @@ export const relations = defineRelations(
       profile: r.one.userProfile(),
       sessions: r.many.session(),
       accounts: r.many.account(),
-      members: r.many.member()
+      members: r.many.member(),
+      tasks: r.many.task()
     },
     invitation: {
       organization: r.one.organization({
@@ -325,7 +344,8 @@ export const relations = defineRelations(
       user: r.one.user({ from: r.twoFactor.userId, to: r.user.id })
     },
     session: { user: r.one.user({ from: r.session.userId, to: r.user.id }) },
-    account: { user: r.one.user({ from: r.account.userId, to: r.user.id }) }
+    account: { user: r.one.user({ from: r.account.userId, to: r.user.id }) },
+    task: { user: r.one.user({ from: r.task.userId, to: r.user.id }) }
   })
 );
 
@@ -340,6 +360,7 @@ export const schema = {
   account,
   session,
   member,
+  task,
   user,
   team
 };
