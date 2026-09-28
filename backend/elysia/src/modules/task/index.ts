@@ -1,8 +1,8 @@
 import { Elysia } from 'elysia';
 
-import { type Model, model } from '@/modules/task/model';
 import { taskService } from '@/modules/task/service';
 import { payload } from '@/modules/task/payload';
+import { model } from '@/modules/task/model';
 import { loadAuthContext } from '@/lib/auth';
 import { schema } from '@/lib/util/schema';
 
@@ -10,14 +10,14 @@ export const taskRoutes = new Elysia({ name: 'Task.Routes', prefix: '/tasks' })
   .use(loadAuthContext)
   .get(
     '/',
-    async ({ user: { id: userId } }) =>
-      (await taskService.get({ userId })) as Model['tasks'],
-    { response: model.tasks }
+    async ({ user: { id: userId }, query }) =>
+      await taskService.getAll({ ...query, userId }),
+    { response: model.paginatedTasks, query: payload.query }
   )
   .get(
     '/:id',
     async ({ user: { id: userId }, params: { id } }) =>
-      (await taskService.get({ userId, id })) as Model['task'],
+      await taskService.get({ userId, id }),
     { params: payload.taskId, response: model.task }
   )
   .delete(

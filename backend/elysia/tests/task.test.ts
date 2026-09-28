@@ -47,8 +47,9 @@ describe('tests for task resource', () => {
 
   test('should fetch tasks for user', async () => {
     const headers = await ctx.getAuthHeaders({ userId: gwen.id });
+
     const { status, data } = await api.tasks.get(getSessionCookie(headers));
     expect(status).toBe(StatusMap.OK);
-    expect(data?.length).toBe(1);
+    expect(data?.data?.length).toBe(1);
   });
 });
