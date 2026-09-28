@@ -1,11 +1,11 @@
 CREATE TABLE `task` (
   `user_id` text NOT NULL,
   `status` text DEFAULT 'incomplete',
-  `title` text NOT NULL,
+  `title` text NOT NULL CONSTRAINT `task_title_unique_index` UNIQUE,
   `description` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_task_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 );
 
@@ -30,7 +30,7 @@ CREATE TABLE `__new_account` (
   `bio` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_account_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 );
 
@@ -100,7 +100,7 @@ CREATE TABLE `__new_invitation` (
   `role` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_invitation_organization_id_organization_id_fk` FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_invitation_inviter_id_user_id_fk` FOREIGN KEY (`inviter_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 );
@@ -153,7 +153,7 @@ CREATE TABLE `__new_member` (
   `role` text NOT NULL,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_member_organization_id_organization_id_fk` FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_member_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 );
@@ -199,7 +199,7 @@ CREATE TABLE `__new_organization` (
   `logo` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae'
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44'
 );
 
 --> statement-breakpoint
@@ -244,7 +244,7 @@ CREATE TABLE `__new_organization_role` (
   `role` text NOT NULL,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_organization_role_organization_id_organization_id_fk` FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`) ON DELETE CASCADE
 );
 
@@ -293,7 +293,7 @@ CREATE TABLE `__new_session` (
   `user_agent` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_session_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 );
 
@@ -347,7 +347,7 @@ CREATE TABLE `__new_team` (
   `name` text NOT NULL,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_team_organization_id_organization_id_fk` FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`) ON DELETE CASCADE
 );
 
@@ -391,7 +391,7 @@ CREATE TABLE `__new_team_member` (
   `membership_key` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_team_member_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_team_member_team_id_team_id_fk` FOREIGN KEY (`team_id`) REFERENCES `team` (`id`) ON DELETE CASCADE
 );
@@ -439,7 +439,7 @@ CREATE TABLE `__new_two_factor` (
   `locked_until` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae',
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44',
   CONSTRAINT `fk_two_factor_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 );
 
@@ -500,7 +500,7 @@ CREATE TABLE `__new_user` (
   `role` text,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae'
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44'
 );
 
 --> statement-breakpoint
@@ -565,7 +565,7 @@ CREATE TABLE `__new_verification` (
   `value` text NOT NULL,
   `updated_at` text NOT NULL,
   `created_at` text NOT NULL,
-  `id` text PRIMARY KEY DEFAULT '01a0e17c-c677-74b3-856b-b29a932fd2ae'
+  `id` text PRIMARY KEY DEFAULT '01a0e5a0-c816-72f3-9ad4-45d11f2a1a44'
 );
 
 --> statement-breakpoint
@@ -686,3 +686,6 @@ CREATE INDEX `verification_identifier_index` ON `verification` (`identifier`);
 
 --> statement-breakpoint
 CREATE INDEX `user_profile_user_id_index` ON `user_profile` (`user_id`);
+
+--> statement-breakpoint
+CREATE INDEX `task_user_id_index` ON `task` (`user_id`);

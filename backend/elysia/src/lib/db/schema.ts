@@ -261,17 +261,21 @@ export const invitation = t.snakeCase.table(
   ]
 );
 
-export const task = t.snakeCase.table('task', {
-  userId: t
-    .text()
-    .references(() => user.id, { onDelete: 'cascade' })
-    .notNull(),
-  status: t.text().$type<Status>().default(Status.incomplete),
-  title: t.text().notNull(),
-  description: t.text(),
-  ...timestamps,
-  id
-});
+export const task = t.snakeCase.table(
+  'task',
+  {
+    userId: t
+      .text()
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    status: t.text().$type<Status>().default(Status.incomplete),
+    title: t.text().unique('task_title_unique_index').notNull(),
+    description: t.text(),
+    ...timestamps,
+    id
+  },
+  table => [t.index('task_user_id_index').on(table.userId)]
+);
 
 export const relations = defineRelations(
   {
