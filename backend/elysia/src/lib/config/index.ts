@@ -132,14 +132,6 @@ export const envSchema = z.object(
         description:
           'Time remaining until automatic logout (seconds), defaults to 1 hour.'
       }),
-    APPLICATION_NAME: z
-      .string('APPLICATION_NAME should be a valid string.')
-      .nonempty('APPLICATION_NAME should not be empty.')
-      .trim()
-      .default('task-manager')
-      .meta({
-        description: 'Name of the application, defaults to task-manager.'
-      }),
     SMTP_URL: z
       .url('SMTP_URL should be a valid url.')
       .nonempty('SMTP_URL should not be empty.')
@@ -179,6 +171,12 @@ export const envSchema = z.object(
       .meta({
         description: 'Server running environment, defaults to development.'
       }),
+    APPLICATION_NAME: z
+      .string('APPLICATION_NAME should be a valid string.')
+      .nonempty('APPLICATION_NAME should not be empty.')
+      .trim()
+      .default('server')
+      .meta({ description: 'Name of the application, defaults to server.' }),
     MAX_FILE_SIZE: z.coerce
       .number('MAX_FILE_SIZE should be a valid number in bytes.')
       .default(1 * 1_000 * 1_000)
@@ -224,3 +222,4 @@ export const envSchema = z.object(
 );
 
 export const env = envSchema.parse(process.env);
+export type Env = z.infer<typeof envSchema>;
