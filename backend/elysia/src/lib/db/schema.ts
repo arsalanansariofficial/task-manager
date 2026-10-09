@@ -45,15 +45,12 @@ export const id = t
   .$default(() => Bun.randomUUIDv7());
 
 export const user = t.snakeCase.table('user', {
-  emailVerified: t
-    .integer({ mode: 'boolean' })
-    .$default(() => false)
-    .notNull(),
-  phoneNumber: t.text().unique('user_phone_number_unique_index'),
-  email: t.text().unique('user_email_unique_index').notNull(),
-  username: t.text().unique('user_username_unique_index'),
+  emailVerified: t.integer({ mode: 'boolean' }).default(false).notNull(),
+  phoneNumber: t.text().unique('ux_user_phone_number'),
   phoneNumberVerified: t.integer({ mode: 'boolean' }),
+  email: t.text().unique('ux_user_email').notNull(),
   twoFactorEnabled: t.integer({ mode: 'boolean' }),
+  username: t.text().unique('ux_user_username'),
   isAnonymous: t.integer({ mode: 'boolean' }),
   banned: t.integer({ mode: 'boolean' }),
   displayUsername: t.text(),
@@ -73,14 +70,14 @@ export const userProfile = t.snakeCase.table(
       .text()
       .primaryKey()
       .references(() => user.id, { onDelete: 'cascade' }),
-    phoneNumber: t.text().unique('user_profile_phone_number_unique_index'),
+    phoneNumber: t.text().unique('ux_user_profile_phone_number'),
     gender: t.text().$type<Gender>(),
     address: t.text(),
     cover: t.text(),
     bio: t.text(),
     ...timestamps
   },
-  table => [t.index('user_profile_user_id_index').on(table.userId)]
+  table => [t.index('fk_user_profile_user_id').on(table.userId)]
 );
 
 export const account = t.snakeCase.table(
@@ -106,7 +103,7 @@ export const account = t.snakeCase.table(
     ...timestamps,
     id
   },
-  table => [t.index('account_user_id_index').on(table.userId)]
+  table => [t.index('fk_account_user_id').on(table.userId)]
 );
 
 export const session = t.snakeCase.table(
@@ -116,7 +113,7 @@ export const session = t.snakeCase.table(
       .text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    token: t.text().notNull().unique('session_token_unique_index'),
+    token: t.text().notNull().unique('ux_session_token'),
     activeOrganizationId: t.text(),
     expiresAt: date().notNull(),
     impersonatedBy: t.text(),
@@ -126,11 +123,11 @@ export const session = t.snakeCase.table(
     ...timestamps,
     id
   },
-  table => [t.index('session_user_id_index').on(table.userId)]
+  table => [t.index('fk_session_user_id').on(table.userId)]
 );
 
 export const organization = t.snakeCase.table('organization', {
-  slug: t.text().unique('organization_slug_unique_index').notNull(),
+  slug: t.text().unique('ux_organization_slug').notNull(),
   name: t.text().notNull(),
   metadata: t.text(),
   logo: t.text(),
@@ -145,15 +142,15 @@ export const twoFactor = t.snakeCase.table(
       .text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    verified: t.integer({ mode: 'boolean' }).$default(() => true),
-    failedVerificationCount: t.integer().$default(() => 0),
+    verified: t.integer({ mode: 'boolean' }).default(true),
+    failedVerificationCount: t.integer().default(0),
     backupCodes: t.text().notNull(),
     secret: t.text().notNull(),
     lockedUntil: t.text(),
     ...timestamps,
     id
   },
-  table => [t.index('two_factor_user_id_index').on(table.userId)]
+  table => [t.index('fk_two_factor_user_id').on(table.userId)]
 );
 
 export const teamMember = t.snakeCase.table(
@@ -172,8 +169,8 @@ export const teamMember = t.snakeCase.table(
     id
   },
   table => [
-    t.index('team_member_user_id_index').on(table.userId),
-    t.index('team_member_team_id_index').on(table.teamId)
+    t.index('fk_team_member_user_id').on(table.userId),
+    t.index('fk_team_member_team_id').on(table.teamId)
   ]
 );
 
@@ -193,8 +190,8 @@ export const member = t.snakeCase.table(
     id
   },
   table => [
-    t.index('member_user_id_index').on(table.userId),
-    t.index('member_organization_id_index').on(table.organizationId)
+    t.index('fk_member_user_id').on(table.userId),
+    t.index('fk_member_organization_id').on(table.organizationId)
   ]
 );
 
@@ -210,7 +207,7 @@ export const team = t.snakeCase.table(
     ...timestamps,
     id
   },
-  table => [t.index('team_organization_id_index').on(table.organizationId)]
+  table => [t.index('fk_team_organization_id').on(table.organizationId)]
 );
 
 export const organizationRole = t.snakeCase.table(
@@ -226,7 +223,7 @@ export const organizationRole = t.snakeCase.table(
     id
   },
   table => [
-    t.index('organization_role_organization_id_index').on(table.organizationId)
+    t.index('fk_organization_role_organization_id').on(table.organizationId)
   ]
 );
 
@@ -239,7 +236,7 @@ export const verification = t.snakeCase.table(
     ...timestamps,
     id
   },
-  table => [t.index('verification_identifier_index').on(table.identifier)]
+  table => [t.index('idx_verification_identifier').on(table.identifier)]
 );
 
 export const invitation = t.snakeCase.table(
@@ -262,8 +259,8 @@ export const invitation = t.snakeCase.table(
     id
   },
   table => [
-    t.index('invitation_organization_id_index').on(table.organizationId),
-    t.index('invitation_inviter_id_index').on(table.inviterId)
+    t.index('fk_invitation_organization_id').on(table.organizationId),
+    t.index('fk_invitation_inviter_id').on(table.inviterId)
   ]
 );
 
@@ -278,12 +275,12 @@ export const task = t.snakeCase.table(
       .text()
       .$type<Status>()
       .$default(() => Status.incomplete),
-    title: t.text().unique('task_title_unique_index').notNull(),
+    title: t.text().unique('ux_task_title').notNull(),
     description: t.text(),
     ...timestamps,
     id
   },
-  table => [t.index('task_user_id_index').on(table.userId)]
+  table => [t.index('fk_task_user_id').on(table.userId)]
 );
 
 export const relations = defineRelations(
