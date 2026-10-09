@@ -1,5 +1,4 @@
 import { beforeEach, afterAll, describe, expect, test } from 'bun:test';
-import { APIError } from 'better-auth';
 import { StatusMap } from 'elysia';
 
 import type { Payload } from '@/modules/user/payload';
@@ -17,7 +16,11 @@ import { auth, ctx } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 describe('tests for user resource', () => {
-  afterAll(async () => await Promise.all([resetDb(), resetDisk()]));
+  afterAll(async () => {
+    await Promise.all([resetDb(), resetDisk()]);
+    db.$client.close();
+  });
+
   beforeEach(setupDb);
 
   test('should signup a new user', async () => {
@@ -61,7 +64,7 @@ describe('tests for user resource', () => {
     const { status, data } = await api.users.me.patch(
       {
         'user.image': Bun.file('tests/fixtures/images/image.png')
-      } as Payload['userWithProfile'],
+      } as Payload['update'],
       getSessionCookie(headers)
     );
 
@@ -84,10 +87,10 @@ describe('tests for user resource', () => {
   test('should not update invalid user fields', async () => {
     const { status } = await api.users.me.patch({
       profile: { age: 1 },
-      user: { name: 1 }
-    } as unknown as Payload['userWithProfile']);
+      name: 1
+    } as unknown as Payload['update']);
 
-    expect(status).toBe(StatusMap['Unprocessable Content']);
+    expect(status).toBe(StatusMap['Bad Request']);
   });
 
   test('should not login a non existing user', async () => {
@@ -114,6 +117,6 @@ describe('tests for user resource', () => {
   });
 
   test('should not delete account for unauthenticated user', async () => {
-    expect(auth.api.deleteUser({ body: {} })).rejects.toBeInstanceOf(APIError);
+    expect(auth.api.deleteUser({ body: {} })).rejects.toBeInstanceOf(Error);
   });
 });

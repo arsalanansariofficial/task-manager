@@ -2,43 +2,50 @@ import { Elysia } from 'elysia';
 
 import { userService } from '@/modules/user/service';
 import { payload } from '@/modules/user/payload';
-import { model } from '@/modules/user/model';
 import { loadAuthContext } from '@/lib/auth';
+import { schema } from '@/lib/util/schema';
 
-const privateRoutes = new Elysia({ name: 'User.Private.Routes' })
+export const userRoutes = new Elysia({ name: 'User.Routes', prefix: '/users' })
+  .post(
+    '/user-has-permission',
+    async params => await userService.userHasPermission({ body: params.body }),
+    { body: payload.userHasPermission, response: schema.status() }
+  )
   .use(loadAuthContext)
-  .get('/me', ({ user }) => user, { response: model.userWithProfile })
   .patch(
     '/me',
-    async ({ request: { headers }, user, body, set }) =>
-      await userService.update({ payload: body, headers, user, set }),
-    { response: model.userWithProfile, body: payload.userWithProfile }
-  )
-  .post(
-    '/view-backup-codes',
-    async ({ body: { userId } }) =>
-      await userService.getBackupCodes({ userId }),
-    { body: payload.viewBackupCodes, response: payload.status }
-  )
-  .post(
-    '/set-password',
-    async ({ body: { newPassword }, request: { headers } }) =>
-      await userService.setPassword({ newPassword, headers }),
-    { body: payload.setPassword, response: payload.status }
+    async params =>
+      await userService.update({
+        headers: params.request.headers,
+        body: params.body,
+        user: params.user,
+        set: params.set
+      }),
+    { response: payload.read, body: payload.update }
   )
   .post(
     '/verify-password',
-    async ({ request: { headers }, body: { password } }) =>
-      await userService.verifyPassword({ password, headers }),
-    { body: payload.verifyPassword, response: payload.status }
-  );
-
-const publicRoutes = new Elysia({ name: 'User.Public.Routes' }).post(
-  '/user-has-permission',
-  async ({ body }) => await userService.userHasPermission(body),
-  { body: payload.userHasPermission, response: payload.status }
-);
-
-export const userRoutes = new Elysia({ name: 'User.Routes', prefix: '/users' })
-  .use(privateRoutes)
-  .use(publicRoutes);
+    async params =>
+      await userService.verifyPassword({
+        headers: params.request.headers,
+        body: params.body,
+        set: params.set
+      }),
+    { body: payload.verifyPassword, response: schema.status() }
+  )
+  .post(
+    '/set-password',
+    async params =>
+      await userService.setPassword({
+        headers: params.request.headers,
+        body: params.body,
+        set: params.set
+      }),
+    { body: payload.setPassword, response: schema.status() }
+  )
+  .post(
+    '/view-backup-codes',
+    async params => await userService.getBackupCodes({ body: params.body }),
+    { body: payload.viewBackupCodes, response: schema.status() }
+  )
+  .get('/me', params => params.user, { response: payload.read });
