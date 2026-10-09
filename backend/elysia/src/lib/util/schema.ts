@@ -31,7 +31,24 @@ function pagination<T>(schema: z.ZodType<T>) {
   );
 }
 
-function file(attribute: string): z.ZodFile {
+function status() {
+  return z
+    .object(
+      {
+        backupCodes: z.array(
+          z.string('backupCode should be a valid string.'),
+          'backupCodes should be a valid array.'
+        ),
+        success: z.boolean('success should be valid boolean.'),
+        status: z.boolean('status should be valid boolean.'),
+        error: schema.string('error').nullable()
+      },
+      'status should be a valid object.'
+    )
+    .partial();
+}
+
+function file(attribute: string) {
   return z
     .file(`${attribute} should be a valid file.`)
     .max(
@@ -45,12 +62,24 @@ function file(attribute: string): z.ZodFile {
     .mime([`image/png`], `${attribute} should be in 'png' format.`);
 }
 
-function typeOrArray(type: z.ZodType) {
-  const key = type.meta()?.title || 'property';
-  const value = type.meta()?.type || 'type';
+function pageQuery() {
+  return z
+    .object(
+      {
+        pageSize: z.coerce.number('pageSize should be a valid number.'),
+        page: z.coerce.number('page should be a valid number.')
+      },
+      'pageQuery should be a valid object.'
+    )
+    .partial();
+}
+
+function typeOrArray<T>(schema: z.ZodType<T>) {
+  const key = schema.meta()?.title || 'property';
+  const value = schema.meta()?.schema || 'type';
 
   return z.union(
-    [z.array(type), type],
+    [z.array(schema), schema],
     `${key} should either be ${value} or ${value}[].`
   );
 }
@@ -62,6 +91,16 @@ function nullish(attribute: string) {
       z.null(`${attribute} should be null.`)
     ],
     `${attribute} should be either null or undefined.`
+  );
+}
+
+function timestamps() {
+  return z.object(
+    {
+      updatedAt: schema.date('updatedAt'),
+      createdAt: schema.date('createdAt')
+    },
+    'timestamps should be valid object.'
   );
 }
 
@@ -87,6 +126,13 @@ function url(attribute: string) {
     .trim();
 }
 
+function time(attribute: string) {
+  return string(attribute).regex(
+    /^(?:[01]\d|2[0-3]):[0-5]\d$/,
+    `${attribute} is in invalid time format.`
+  );
+}
+
 function email() {
   return z
     .email(`email should be valid.`)
@@ -95,23 +141,27 @@ function email() {
     .trim();
 }
 
-function fileOrUrl(attribute: string) {
-  return z.union([url(attribute), file(attribute)]);
+function date(attribute: string) {
+  return z.coerce.date(`${attribute} should be a valid date.`);
 }
 
-function date(attribute: string) {
-  return z.date(`${attribute} should be a valid date.`);
+function fileOrUrl(attribute: string) {
+  return z.union([url(attribute), file(attribute)]);
 }
 
 export const schema = {
   typeOrArray,
   pagination,
+  timestamps,
+  pageQuery,
   fileOrUrl,
   nullish,
   string,
+  status,
   email,
   uuid,
   date,
   file,
+  time,
   url
-} as const;
+};
