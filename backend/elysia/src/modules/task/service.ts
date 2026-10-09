@@ -2,73 +2,112 @@ import { and, eq } from 'drizzle-orm';
 
 import type { Payload } from '@/modules/task/payload';
 
-import { type SchemaSelect, task } from '@/lib/db/schema';
-import { TaskNotFoundError } from '@/lib/error';
+import { schema, task } from '@/lib/db/schema';
 import { paginate } from '@/lib/pagination';
+import { ApiError } from '@/lib/error';
 import { db } from '@/lib/db';
 
-async function getAll(params: { userId: string } & Payload['query']) {
+import type { Model } from '../user/model';
+
+async function getAll(params: {
+  where: Payload['where'];
+  user: Model['user'];
+}) {
+  const { pageSize, page, ...where } = params.where;
+  const { user } = params;
+
   return await paginate({
     async getData({ offset, limit }) {
       return await db.query.task.findMany({
         orderBy: { createdAt: 'desc', id: 'desc' },
-        where: { userId: params.userId },
+        where: { userId: user.id, ...where },
         offset,
         limit
       });
     },
     async getTotal() {
-      return await db.$count(task).execute();
+      return db.$count(task).sync();
     },
-    ...params
+    pageSize,
+    page
   });
 }
 
-async function deleteTask({ userId, id }: { userId: string; id: string }) {
-  const [$task] = await db
-    .delete(task)
-    .where(and(eq(task.id, id), eq(task.userId, userId)))
-    .returning();
+async function update(params: {
+  body: Payload['update'];
+  params: Payload['id'];
+}) {
+  const { id } = params.params;
+  const { body } = params;
 
-  if (!$task)
-    throw new TaskNotFoundError([
-      {
-        message: `Requested task with ${id} for user ${userId} does not exist.`,
-        path: [id, userId]
-      }
-    ]);
-
-  return $task;
-}
-
-async function get({ userId, id }: { userId: string; id: string }) {
-  const task = await db.query.task.findFirst({ where: { userId, id } });
+  const task = await db.query.task.findFirst({ where: { id } });
 
   if (!task)
-    throw new TaskNotFoundError([
-      { message: `Requested task with ${id} does not exist.`, path: [id] }
-    ]);
+    throw new ApiError({
+      message: `Requested task with ${id} does not exist.`
+    });
+
+  if (body)
+    return db
+      .update(schema.task)
+      .set(body)
+      .where(eq(schema.task.id, id))
+      .returning()
+      .get();
 
   return task;
 }
 
-async function update(args: { payload: Payload['patchTask']; id: string }) {
-  const [$task] = await db
-    .update(task)
-    .set(args.payload)
-    .where(eq(task.id, args.id))
-    .returning();
+async function deleteTask(params: {
+  params: Payload['id'];
+  user: Model['user'];
+}) {
+  const { id } = params.params;
+  const { user } = params;
 
-  return $task as SchemaSelect['task'];
+  const task = db
+    .delete(schema.task)
+    .where(and(eq(schema.task.id, id), eq(schema.task.userId, user.id)))
+    .returning()
+    .get();
+
+  if (!task)
+    throw new ApiError({
+      message: `Requested task with ${id} for user ${user.id} does not exist.`
+    });
+
+  return task;
 }
 
-async function create(args: { payload: Payload['task']; userId: string }) {
-  const [$task] = await db
-    .insert(task)
-    .values({ ...args.payload, userId: args.userId })
-    .returning();
+async function get(params: { params: Payload['id']; user: Model['user'] }) {
+  const { id } = params.params;
+  const { user } = params;
 
-  return $task as SchemaSelect['task'];
+  const task = await db.query.task.findFirst({
+    where: { userId: user.id, id }
+  });
+
+  if (!task)
+    throw new ApiError({
+      message: `Requested task with ${id} does not exist.`
+    });
+
+  return task;
 }
 
-export const taskService = { deleteTask, getAll, update, create, get };
+async function create(params: {
+  body: Payload['create'];
+  user: Model['user'];
+}) {
+  const { user, body } = params;
+
+  const task = db
+    .insert(schema.task)
+    .values({ ...body, userId: user.id })
+    .returning()
+    .get();
+
+  return task;
+}
+
+export const service = { deleteTask, getAll, update, create, get };

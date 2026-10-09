@@ -1,8 +1,7 @@
 import { Elysia } from 'elysia';
 
-import { taskService } from '@/modules/task/service';
+import { service } from '@/modules/task/service';
 import { payload } from '@/modules/task/payload';
-import { model } from '@/modules/task/model';
 import { loadAuthContext } from '@/lib/auth';
 import { schema } from '@/lib/util/schema';
 
@@ -10,35 +9,31 @@ export const taskRoutes = new Elysia({ name: 'Task.Routes', prefix: '/tasks' })
   .use(loadAuthContext)
   .get(
     '/',
-    async ({ user: { id: userId }, query }) =>
-      await taskService.getAll({ ...query, userId }),
-    { response: model.paginatedTasks, query: payload.query }
+    async params =>
+      await service.getAll({ where: params.query, user: params.user }),
+    { response: payload.paginate, query: payload.where }
   )
   .get(
     '/:id',
-    async ({ user: { id: userId }, params: { id } }) =>
-      await taskService.get({ userId, id }),
-    { params: payload.taskId, response: model.task }
+    async params =>
+      await service.get({ params: params.params, user: params.user }),
+    { response: payload.read, params: payload.id }
   )
   .delete(
     '/:id',
-    async ({ user: { id: userId }, params: { id } }) =>
-      await taskService.deleteTask({ userId, id }),
-    {
-      body: schema.nullish('body'),
-      params: payload.taskId,
-      response: model.task
-    }
+    async params =>
+      await service.deleteTask({ params: params.params, user: params.user }),
+    { body: schema.nullish('body'), response: payload.read, params: payload.id }
   )
   .patch(
     '/:id',
-    async ({ params: { id }, body: payload }) =>
-      await taskService.update({ payload, id }),
-    { body: payload.patchTask, params: payload.taskId, response: model.task }
+    async params =>
+      await service.update({ params: params.params, body: params.body }),
+    { response: payload.read, body: payload.update, params: payload.id }
   )
   .post(
     '/',
-    async ({ user: { id: userId }, body: payload }) =>
-      await taskService.create({ payload, userId }),
-    { response: model.task, body: payload.task }
+    async params =>
+      await service.create({ user: params.user, body: params.body }),
+    { response: payload.read, body: payload.create }
   );
